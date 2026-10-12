@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Psych 251 Stats Lab: p-values, power, CIs, Bayes factors</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fafaf7;--fg:#1d2330;--mut:#667085;--card:#ffffff;--line:#e3e5ea;--grid:#eceef2;--acc:#2563eb;--acc2:#dc2626;--ok:#15803d;--warn:#b45309;--soft:#eef3ff;--gray:#b6bcc8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--fg:#e8eaf0;--mut:#9aa3b2;--card:#1a1f29;--line:#2b3240;--grid:#252b37;--acc:#6ea0ff;--acc2:#ff7b7b;--ok:#4ade80;--warn:#fbbf24;--soft:#1e2740;--gray:#4b5565}}
+:root[data-theme="dark"]{--bg:#12151c;--fg:#e8eaf0;--mut:#9aa3b2;--card:#1a1f29;--line:#2b3240;--grid:#252b37;--acc:#6ea0ff;--acc2:#ff7b7b;--ok:#4ade80;--warn:#fbbf24;--soft:#1e2740;--gray:#4b5565}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:940px;margin:0 auto;padding:18px 14px 60px}
+h1{font-size:1.5rem;margin:.2em 0 .1em}
+h2{font-size:1.25rem;margin:.2em 0 .4em}
+h3{font-size:1rem;margin:1em 0 .3em}
+.sub{color:var(--mut);margin:0 0 14px}
+nav{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+nav button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:7px 12px;border-radius:999px;cursor:pointer;font-size:.9rem}
+nav button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0}
+.key{background:var(--soft);border-left:4px solid var(--acc)}
+.sketch{border-left:4px solid var(--warn)}
+.trap{border-left:4px solid var(--acc2)}
+.card p{margin:.4em 0}.card ul{margin:.3em 0;padding-left:1.2em}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 18px;margin:8px 0}
+.ctl label{display:block;font-size:.88rem;color:var(--mut)}
+.ctl b{color:var(--fg);font-weight:600}
+input[type=range]{width:100%}
+select,input[type=number]{padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);font-size:.95rem;width:100%}
+button.b{background:var(--acc);color:#fff;border:0;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.92rem;margin:4px 6px 4px 0}
+button.b.alt{background:transparent;color:var(--acc);border:1px solid var(--acc)}
+canvas{width:100%;display:block}
+.out{font-size:.95rem;margin:6px 0;min-height:1.4em}
+.out b{color:var(--acc)}
+.chips span{display:inline-block;padding:2px 8px;margin:2px;border-radius:999px;border:1px solid var(--line);font-size:.82rem;font-variant-numeric:tabular-nums}
+.chips span.s{background:var(--acc2);color:#fff;border-color:var(--acc2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.9rem}td,th{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left}
+.q{padding:12px 14px}.q .cat{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--acc)}
+.q .ans{display:none;margin-top:8px;padding:8px 10px;background:var(--soft);border-radius:8px}
+.q.show .ans{display:block}
+.pill{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:4px 11px;cursor:pointer;margin:2px;font-size:.85rem}
+.pill.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.ok{color:var(--ok)}.bad{color:var(--acc2)}
+small{color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Psych 251 Stats Lab</h1>
+<p class="sub">Interactive study tools for PS2: p-values, multiplicity, p-hacking, power, estimates &amp; CIs, Bayes factors. Rule of the lab: <b>predict or sketch first, then run it.</b> Everything is simulated live in your browser.</p>
+<nav id="nav"></nav>
+
+<!-- 0 START -->
+<section id="s0">
+<div class="card key"><h2>How to use this</h2>
+<p>The quiz is on paper with sketches and plot-reading, no calculation. So the goal is <b>pictures in your head</b>: what a p-value histogram looks like, how a power curve bends, what a CI dance looks like. For each tab: (1) read the key box, (2) sketch your prediction on paper, (3) run the simulator and compare, (4) try the challenges, (5) finish with the Practice tab and say answers out loud before revealing.</p></div>
+<div class="card"><h3>The six concepts at a glance</h3>
+<table>
+<tr><th>Concept</th><th>One-line core</th><th>Classic trap</th></tr>
+<tr><td>1. p-values</td><td>P(data this extreme or more | null true). Uniform under the null; piles near 0 under a true effect.</td><td>"p = .03 means 3% chance the null is true."</td></tr>
+<tr><td>2. Multiplicity</td><td>k independent null tests: P(at least one p&lt;.05) = 1 − .95<sup>k</sup> (20 tests: 64%).</td><td>Reporting only the hit as if it were the only test.</td></tr>
+<tr><td>3. p-hacking</td><td>Optional stopping, selective outcomes, flexible exclusions/subgroups: each adds chances to hit p&lt;.05.</td><td>Thinking each test is "valid" so the total is fine.</td></tr>
+<tr><td>4. Power</td><td>P(reject null | effect real) rises with d, N, α. Underpowered + significance filter ⇒ inflated published effects.</td><td>Powering from a small pilot's effect size.</td></tr>
+<tr><td>5. Estimates &amp; CIs</td><td>d = mean difference ÷ SD. SE shrinks as 1/√n. 95% CI: 95% of such intervals (over repeated studies) contain the truth.</td><td>"95% probability the true value is in this interval."</td></tr>
+<tr><td>6. Bayes factors</td><td>BF10 = P(data|H1) ÷ P(data|H0). 3, 10, 1/3 are ratios of evidence, not probabilities of hypotheses.</td><td>Treating BF &gt; 3 as a new magic cutoff; ignoring that it depends on the H1 model.</td></tr>
+</table></div>
+<div class="card"><h3>Suggested 90-minute route</h3>
+<ul><li>15 min: p-values tab + sketches of null vs effect histograms</li>
+<li>15 min: multiplicity + p-hacking (watch optional stopping inflate false positives)</li>
+<li>20 min: power (including the winner's-curse plot and the pilot-noise plot)</li>
+<li>15 min: estimates &amp; CIs (dance, replication comparison)</li>
+<li>10 min: Bayes factors</li>
+<li>15 min: Practice quiz, out loud, then tally what you missed</li></ul>
+<p><small>Sources: Experimentology Ch. 5, 6, 10; Week 3a/3b/3c slides; PS2 concept list.</small></p></div>
+</section>
+
+<!-- 1 P-VALUES -->
+<section id="s1">
+<div class="card key"><h2>1. p-values</h2>
+<p>A p-value is the probability of data <b>this extreme or more extreme</b>, computed <b>assuming the null is true</b>. It is a likelihood-like quantity about data given H0, not P(H0 | data) and not an effect size.</p>
+<p>Under the null, p is <b>uniform</b> on [0, 1]. So 5% of null experiments give p&lt;.05 no matter the sample size. With a true effect, p-values pile up near 0 (right-skewed); the larger the power, the more piled.</p></div>
+<div class="card sketch"><b>Sketch first:</b> draw two histograms of p (x from 0 to 1): one when there is no effect, one when there is a real effect with about 80% power. Then run it.</div>
+<div class="card"><div class="ctl" id="c1"></div>
+<button class="b" id="b1a">Run 2000 experiments</button><button class="b alt" id="b1b">Run one experiment</button>
+<div class="grid2"><div><canvas id="p1n"></canvas></div><div><canvas id="p1a"></canvas></div></div>
+<div class="out" id="o1"></div>
+<div class="out" id="o1b"></div><div class="chips" id="chips1"></div></div>
+<div class="card"><h3>Challenges</h3><ul>
+<li>Set d = 0. Change N from 5 to 200. Does the null histogram change? (It should not.)</li>
+<li>Set d = 0.5 and N = 64. What fraction is below .05? Now N = 10.</li>
+<li>With the one-experiment button, click 10 times at d = 0.5, N = 20. How wild are individual p-values? (This is the "dance of the p-values".)</li></ul></div>
+<div class="card trap"><b>What p is not:</b> not P(null true); not "probability the result is due to chance"; not the effect size (tiny effects give tiny p with huge N); p&gt;.05 is not evidence of no effect.</div>
+</section>
+
+<!-- 2 MULTIPLICITY -->
+<section id="s2">
+<div class="card key"><h2>2. Multiplicity</h2>
+<p>If each of k independent tests has a 5% false-positive rate, the chance that <b>at least one</b> is significant is 1 − (0.95)<sup>k</sup>. k = 2: 9.8%. k = 20: 64%. The fix (e.g., Bonferroni: use α/k) only works if you know k, which is why transparency about the set of tests matters.</p></div>
+<div class="card sketch"><b>Sketch first:</b> plot P(at least one false positive) against number of tests k from 1 to 60. Where does it cross 50%?</div>
+<div class="card"><div class="ctl" id="c2"></div>
+<button class="b" id="b2">Simulate 5000 studies with k null tests each</button>
+<canvas id="p2"></canvas><div class="out" id="o2"></div></div>
+<div class="card"><small>Assumes independent tests. Correlated outcomes inflate less than the curve; still well above 5%.</small></div>
+</section>
+
+<!-- 3 P-HACKING -->
+<section id="s3">
+<div class="card key"><h2>3. p-hacking</h2>
+<p>Every analysis choice that depends on the data adds a chance to get p&lt;.05 when nothing is going on. Three classic forms: <b>optional stopping</b> (peek, add participants, peek again), <b>selective reporting of outcomes</b> (measure several DVs, report the one that worked), and <b>flexible exclusions/subgroups</b> (try cuts until something is significant).</p>
+<p><b>Why each test being "valid" doesn't help:</b> the guarantee of 5% applies to a single pre-specified test. Stopping at the first success turns many tests into one reported test. <b>Preregistration</b> fixes the stopping rule, outcome, exclusions and analysis in advance, so the number of tests is known and the p-values mean what they claim. Alternatives: sequential designs with corrected α, or Bayesian sequential designs.</p></div>
+<div class="card sketch"><b>Predict:</b> if you test after every 5 participants per group up to 100 per group and stop when p&lt;.05, what is the true false-positive rate? 6%? 10%? 25%?</div>
+<div class="card"><div class="ctl"><label>Type of p-hack<select id="mode3"><option value="stop">Optional stopping</option><option value="out">Selective outcomes</option><option value="sub">Flexible subgroups</option></select></label></div>
+<div class="ctl" id="c3"></div>
+<button class="b" id="b3">Run 3000 null experiments</button><button class="b alt" id="b3b">Watch one null experiment (stopping)</button>
+<div class="grid2"><div><canvas id="p3a"></canvas></div><div><canvas id="p3b"></canvas></div></div>
+<div class="out" id="o3"></div></div>
+<div class="card"><small>In every mode the true effect is exactly zero, so every "success" is a false positive. Left: false-positive rate with an honest single test vs the hacked procedure. Right: p-value trajectory of one null experiment as participants accumulate (stopping mode).</small></div>
+</section>
+
+<!-- 4 POWER -->
+<section id="s4">
+<div class="card key"><h2>4. Statistical power</h2>
+<p>Power = P(reject H0 | the effect is real, with size d). It increases with <b>effect size</b>, <b>sample size</b>, and <b>α</b> (looser threshold). Conventional target: 80% (90–95% for strong tests). Rules of thumb for a two-group t-test at α = .05, 80% power: d=.8 needs ~26 per group, d=.5 ~64, d=.2 ~394.</p>
+<p><b>Underpowered studies:</b> you miss real effects, and the ones that reach p&lt;.05 are the ones that overestimated the effect (winner's curse). A literature that publishes only significant results then has inflated effect sizes. <b>Pilots</b> cannot fix this: with tiny N, the pilot's effect estimate is very imprecise (see the spread below). Better inputs: a meta-analysis, a smallest effect size of interest, or a general expectation ("what if it's medium?").</p></div>
+<div class="card sketch"><b>Sketch first:</b> power (y, 0–1) vs N per group (x) for d = 0.2, 0.5, 0.8. Mark where each crosses 80%.</div>
+<div class="card"><div class="ctl" id="c4"></div>
+<div class="grid2"><div><canvas id="p4a"></canvas></div><div><canvas id="p4b"></canvas></div></div>
+<div class="out" id="o4a"></div>
+<button class="b" id="b4">Simulate 3000 experiments at this N and d</button>
+<canvas id="p4c"></canvas><div class="out" id="o4"></div></div>
+<div class="card"><h3>Challenges</h3><ul>
+<li>d = 0.3, N = 20. Estimate power, then simulate. Compare the mean d̂ among significant results with the true d.</li>
+<li>Set N = 10 and look at the grey+blue spread of d̂. If you ran a pilot like this, how far off could your effect-size estimate be?</li>
+<li>Lower α to .005. What happens to the power curves? Why does the "significant" cut-off move right?</li></ul></div>
+</section>
+
+<!-- 5 ESTIMATES -->
+<section id="s5">
+<div class="card key"><h2>5. Estimates, effect sizes, and confidence intervals</h2>
+<p><b>Cohen's d</b> = (mean difference) ÷ (pooled SD). It puts different scales on a common footing, but it also depends on how variable the sample is: the same raw difference gives a smaller d in a more variable population. Raw units are better when they're meaningful (ms, counts); d is better when scales are arbitrary.</p>
+<p><b>Smaller studies, noisier estimates:</b> the standard error is about σ/√n. Quadruple n to halve the SE.</p>
+<p><b>95% CI:</b> a procedure such that, over repeated studies, 95% of the intervals contain the true value. For one computed interval you can't say "95% probability the truth is inside". A CI that excludes 0 corresponds to p&lt;.05, but the focus is on the range of plausible effect sizes.</p></div>
+
+<div class="card"><h3>5a. Cohen's d calculator</h3>
+<div class="ctl"><label>Mean (milk-first)<input type="number" id="m1" value="4.5" step="any"></label><label>Mean (tea-first)<input type="number" id="m2" value="3.5" step="any"></label><label>Pooled SD<input type="number" id="sd" value="1.25" step="any"></label></div>
+<button class="pill" data-p="4.5,3.5,1.25">UK adults (7-pt)</button><button class="pill" data-p="50,49,5">US replication (100-pt)</button><button class="pill" data-p="5,4,2.5">Kids (more variable)</button>
+<div class="out" id="o5a"></div></div>
+
+<div class="card"><h3>5b. The dance of the confidence intervals</h3>
+<p>Each row is one replication of the same study. Red intervals miss the true value.</p>
+<div class="ctl" id="c5"></div><button class="b" id="b5">Run 50 replications</button>
+<canvas id="p5"></canvas><div class="out" id="o5"></div></div>
+
+<div class="card"><h3>5c. Original study vs. replications</h3>
+<div class="sketch card" style="margin:6px 0"><b>Read it like the quiz:</b> do the intervals overlap? Does the original CI contain the replication estimates? Which estimate is most precise?</div>
+<div class="ctl" id="c5c"></div>
+<label style="font-size:.9rem"><input type="checkbox" id="pub"> Original only "published" if p&lt;.05</label>
+<label style="font-size:.9rem;margin-left:14px"><input type="checkbox" id="tru"> Show true effect</label><br>
+<button class="b" id="b5c">Generate original + 3 replications</button>
+<canvas id="p5c"></canvas><div class="out" id="o5c"></div></div>
+</section>
+
+<!-- 6 BAYES -->
+<section id="s6">
+<div class="card key"><h2>6. Bayes factors</h2>
+<p><b>BF10 = P(data | H1) ÷ P(data | H0).</b> It says how much better H1 predicted the data than H0 did.</p>
+<ul><li><b>BF10 = 3:</b> data are 3× more likely under H1 than H0 (modest support for H1).</li>
+<li><b>BF10 = 10:</b> 10× (strong support for H1 by common conventions).</li>
+<li><b>BF10 = 1/3:</b> data are 3× more likely under H0 than H1. Equivalently BF01 = 3. <b>Unlike p-values, BFs can support the null.</b></li></ul>
+<p><b>Versus p:</b> p only considers the null and uses "data this extreme or more"; BF compares two specific models using the data actually observed. BF requires specifying H1 (here a default prior on effect size), is continuous (cutoffs like 3 or 10 are guidelines, not magic), and is independent of your prior odds: posterior odds = prior odds × BF. BFs can also be p-hacked if you selectively report.</p></div>
+<div class="card"><h3>6a. BF calculator (two-sample t-test, default JZS prior r = 0.707)</h3>
+<div class="ctl" id="c6"></div><div class="out" id="o6"></div>
+<canvas id="p6a" style="margin-top:6px"></canvas>
+<p style="font-size:.9rem"><small>Verbal labels (one common convention): 1–3 anecdotal, 3–10 moderate, 10–30 strong, 30–100 very strong, &gt;100 extreme; mirror them below 1. Sources differ.</small></p></div>
+<div class="card sketch"><b>Try:</b> n = 24 per group, t = 2.86 (p = .006): is the BF as extreme as the p suggests? Then n = 150, t = 2.0 (p≈.047). Notice that p&lt;.05 can correspond to weak BF evidence.</div>
+<div class="card"><h3>6b. Sequential Bayes factor design</h3>
+<p>Add 5 participants per group at a time; stop when BF10 ≥ 10 or ≤ 1/10, or at the max N.</p>
+<div class="ctl" id="c6b"></div>
+<button class="b" id="b6">Run 300 studies</button><button class="b alt" id="b6b">Watch one study</button>
+<canvas id="p6b"></canvas><div class="out" id="o6b"></div></div>
+</section>
+
+<!-- 7 PRACTICE -->
+<section id="s7">
+<div class="card key"><h2>Practice questions</h2><p>Format mirrors the quiz: short answer, sketch, read a plot. Say or sketch your answer, <b>then</b> reveal. Mark yourself honestly.</p>
+<div id="cats"></div><div class="out" id="tally"></div></div>
+<div id="qs"></div>
+</section>
+</div>
+
+<script>
+//MATH-START
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let rnd=Math.random;
+function randn(){let u=0,v;while(!u)u=rnd();v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function lgamma(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+0.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x)}
+function betacf(a,b,x){const FP=1e-30;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<FP)d=FP;d=1/d;let h=d;for(let m=1;m<=200;m++){let m2=2*m,aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;h*=d*c;aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-12)break}return h}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b}
+function pFromT(t,v){return ibeta(v/(v+t*t),v/2,0.5)}
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y}
+function pnorm(x){return 0.5*(1+erf(x/Math.SQRT2))}
+function qnorm(p){const a=[-39.69683028665376,220.9460984245205,-275.9285104469687,138.357751867269,-30.66479806614716,2.506628277459239],b=[-54.4760987982241,161.5858368580409,-155.6989798598866,66.80131188771972,-13.28068155288572],c=[-0.007784894002430293,-0.3223964580411365,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783],d=[0.007784695709041462,0.3224671290700398,2.445134137142996,3.754408661907416];let q,r;if(p<0.02425){q=Math.sqrt(-2*Math.log(p));return(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)}if(p>1-0.02425){q=Math.sqrt(-2*Math.log(1-p));return-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)}q=p-0.5;r=q*q;return(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1)}
+function gen(n,d){const a=new Array(n);for(let i=0;i<n;i++)a[i]=randn()+(d||0);return a}
+function ttest(x,y){const n1=x.length,n2=y.length;let m1=0,m2=0;for(const v of x)m1+=v;for(const v of y)m2+=v;m1/=n1;m2/=n2;let s1=0,s2=0;for(const v of x)s1+=(v-m1)*(v-m1);for(const v of y)s2+=(v-m2)*(v-m2);const df=n1+n2-2,sp2=(s1+s2)/df,se=Math.sqrt(sp2*(1/n1+1/n2)),t=(m2-m1)/se;return{t,df,p:pFromT(t,df),d:(m2-m1)/Math.sqrt(sp2),diff:m2-m1,se,n1,n2}}
+const tc={};function tcrit(df){if(tc[df])return tc[df];let lo=0,hi=100;for(let i=0;i<50;i++){const m=(lo+hi)/2;if(pFromT(m,df)>0.05)lo=m;else hi=m}return tc[df]=(lo+hi)/2}
+function power(n,d,alpha){const z=qnorm(1-alpha/2),dl=d*Math.sqrt(n/2);return pnorm(dl-z)+pnorm(-dl-z)}
+function bf10(t,n1,n2){const v=n1+n2-2,N=n1*n2/(n1+n2),r2=0.5,l0=-(v+1)/2*Math.log1p(t*t/v);let s=0;const lo=-14,hi=14,K=240,h=(hi-lo)/K;for(let k=0;k<=K;k++){const u=lo+k*h,g=Math.exp(u),a=1+N*g*r2;const lf=-0.5*Math.log(a)-(v+1)/2*Math.log1p(t*t/(v*a))-0.9189385332-0.5*u-1/(2*g);s+=Math.exp(lf-l0)*((k===0||k===K)?0.5:1)}return s*h}
+//MATH-END
+
+/* ---------- UI helpers ---------- */
+const $=s=>document.querySelector(s);
+const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function setup(c,h){const dpr=window.devicePixelRatio||1;const w=Math.max(260,c.parentElement.clientWidth);c.style.width=w+'px';c.style.height=h+'px';c.width=w*dpr;c.height=h*dpr;const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);return{g,w}}
+function fm(v){return String(+(+v).toFixed(2))}
+function plot(c,h,o){const{g,w}=setup(c,h);const L=o.L||46,R=14,T=o.T||16,B=o.B||38;
+ const X=v=>L+(v-o.xr[0])/(o.xr[1]-o.xr[0])*(w-L-R);const Y=v=>h-B-(v-o.yr[0])/(o.yr[1]-o.yr[0])*(h-T-B);
+ g.font='11px system-ui';g.lineWidth=1;g.strokeStyle=col('--grid');g.fillStyle=col('--mut');
+ (o.yt||[]).forEach(v=>{g.beginPath();g.moveTo(L,Y(v));g.lineTo(w-R,Y(v));g.stroke();g.textAlign='right';g.fillText((o.fy||fm)(v),L-5,Y(v)+4)});
+ (o.xt||[]).forEach(v=>{g.textAlign='center';g.fillText((o.fx||fm)(v),X(v),h-B+14)});
+ g.strokeStyle=col('--mut');g.beginPath();g.moveTo(L,T);g.lineTo(L,h-B);g.lineTo(w-R,h-B);g.stroke();
+ g.textAlign='center';g.fillStyle=col('--fg');if(o.xl)g.fillText(o.xl,L+(w-L-R)/2,h-6);
+ if(o.yl){g.save();g.translate(11,T+(h-T-B)/2);g.rotate(-Math.PI/2);g.fillText(o.yl,0,0);g.restore()}
+ if(o.title){g.textAlign='left';g.font='bold 12px system-ui';g.fillText(o.title,L+4,T+2);g.font='11px system-ui'}
+ o.draw&&o.draw(g,X,Y,w,h);return{g,X,Y,w,h}}
+function line(g,pts,X,Y,color,lw,dash){g.strokeStyle=color;g.lineWidth=lw||2;g.setLineDash(dash||[]);g.beginPath();pts.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.stroke();g.setLineDash([])}
+function hseg(g,X,Y,y,x0,x1,color,dash,lw){line(g,[[x0,y],[x1,y]],X,Y,color,lw||1.2,dash)}
+function vseg(g,X,Y,x,y0,y1,color,dash,lw){line(g,[[x,y0],[x,y1]],X,Y,color,lw||1.2,dash)}
+function bins(vals,a,b,k){const c=new Array(k).fill(0);for(const v of vals){let i=Math.floor((v-a)/(b-a)*k);if(i>=0&&i<k)c[i]++;else if(v===b)c[k-1]++}return c}
+function mk(id,defs){const el=$('#'+id);el.innerHTML='';const refs={};defs.forEach(d=>{const l=document.createElement('label');const inp=d.opts?'<select>'+d.opts.map(o=>`<option value="${o}" ${o==d.val?'selected':''}>${o}</option>`).join('')+'</select>':`<input type="range" min="${d.min}" max="${d.max}" step="${d.step}" value="${d.val}">`;l.innerHTML=`${d.label}: <b></b>${inp}`;el.appendChild(l);const i=l.querySelector('input,select'),b=l.querySelector('b');const up=()=>{b.textContent=(d.fmt||fm)(+i.value)};up();i.addEventListener('input',()=>{up();d.on&&d.on()});refs[d.id]={get v(){return +i.value},el:i}});return refs}
+const pct=x=>(100*x).toFixed(1)+'%';
+const defer=f=>setTimeout(f,15);
+
+/* ---------- Tabs ---------- */
+const tabs=['Start','1 p-values','2 Multiplicity','3 p-hacking','4 Power','5 Estimates & CIs','6 Bayes factors','Practice'];
+const nav=$('#nav');let cur=0;const redraw={};
+tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>show(i);nav.appendChild(b)});
+function show(i){cur=i;[...nav.children].forEach((b,j)=>b.classList.toggle('on',i===j));document.querySelectorAll('section').forEach((s,j)=>s.classList.toggle('on',i===j));if(redraw[i])redraw[i]();window.scrollTo(0,0)}
+addEventListener('resize',()=>{if(redraw[cur])redraw[cur]()});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(redraw[cur])redraw[cur]()});
+
+/* ---------- 1 p-values ---------- */
+const S1={};
+const c1=mk('c1',[{id:'n',label:'N per group',min:5,max:200,step:1,val:20,fmt:v=>v},{id:'d',label:'True effect d',min:0,max:1.5,step:0.05,val:0.5}]);
+function draw1(){if(!S1.a)return;const ym=Math.max(0.1,...bins(S1.a,0,1,20).map(v=>v/S1.a.length),...bins(S1.n,0,1,20).map(v=>v/S1.n.length))*1.1;
+ [['#p1n',S1.n,'No effect (d = 0)','--acc2'],['#p1a',S1.a,`True effect d = ${fm(S1.d)}, N = ${S1.nn}`,'--acc']].forEach(([id,v,t,cl])=>{
+  const b=bins(v,0,1,20).map(x=>x/v.length);plot($(id),230,{xr:[0,1],yr:[0,ym],xt:[0,.25,.5,.75,1],yt:[0,ym/2,ym].map(x=>+x.toFixed(2)),xl:'p-value',yl:'proportion',title:t,
+  draw:(g,X,Y)=>{b.forEach((h,i)=>{g.fillStyle=i===0?col(cl):col(cl)+'88';g.fillRect(X(i/20)+1,Y(h),X(1/20)-X(0)-2,Y(0)-Y(h))});vseg(g,X,Y,.05,0,ym,col('--fg'),[4,3])}})})}
+$('#b1a').onclick=()=>{rnd=Math.random;const n=c1.n.v,d=c1.d.v;const A=[],N=[];for(let i=0;i<2000;i++){N.push(ttest(gen(n),gen(n)).p);A.push(ttest(gen(n),gen(n,d)).p)}S1.n=N;S1.a=A;S1.d=d;S1.nn=n;draw1();
+ const f=a=>a.filter(p=>p<.05).length/a.length;$('#o1').innerHTML=`Null: <b>${pct(f(N))}</b> of p-values below .05 (expected 5%). With d = ${fm(d)}, N = ${n}: <b>${pct(f(A))}</b> below .05, which is the <b>power</b> (analytic approx ${pct(power(n,d,.05))}). Leftmost bar (p&lt;.05) has the dark shade.`};
+S1.hist=[];$('#b1b').onclick=()=>{const n=c1.n.v,d=c1.d.v;const r=ttest(gen(n),gen(n,d));S1.hist.unshift(r.p);S1.hist=S1.hist.slice(0,16);
+ $('#o1b').innerHTML=`One experiment: t(${r.df}) = ${r.t.toFixed(2)}, p = <b>${r.p<.001?'&lt;.001':r.p.toFixed(3)}</b>, d̂ = ${r.d.toFixed(2)}. Last runs (red = p&lt;.05):`;
+ $('#chips1').innerHTML=S1.hist.map(p=>`<span class="${p<.05?'s':''}">${p<.001?'<.001':p.toFixed(3)}</span>`).join('')};
+redraw[1]=draw1;
+
+/* ---------- 2 multiplicity ---------- */
+const c2=mk('c2',[{id:'k',label:'Number of independent null tests k',min:1,max:60,step:1,val:20,fmt:v=>v,on:()=>{draw2()}}]);
+const S2={};
+function draw2(){const k=c2.k.v;const fw=x=>1-Math.pow(.95,x),bo=x=>1-Math.pow(1-.05/x,x);const P=[],Q=[];for(let i=1;i<=60;i++){P.push([i,fw(i)]);Q.push([i,bo(i)])}
+ plot($('#p2'),280,{xr:[0,60],yr:[0,1],xt:[0,10,20,30,40,50,60],yt:[0,.25,.5,.75,1],xl:'number of tests k',yl:'P(at least one p<.05)',draw:(g,X,Y)=>{
+ hseg(g,X,Y,.05,0,60,col('--mut'),[4,3]);line(g,P,X,Y,col('--acc2'),2.5);line(g,Q,X,Y,col('--ok'),2.5);
+ g.fillStyle=col('--acc2');g.textAlign='left';g.fillText('uncorrected: 1 − .95^k',X(24),Y(.94)+14);g.fillStyle=col('--ok');g.fillText('Bonferroni (α/k per test)',X(24),Y(.12));
+ g.fillStyle=col('--acc');g.beginPath();g.arc(X(k),Y(fw(k)),6,0,7);g.fill();
+ if(S2.k===k&&S2.f!==undefined){g.strokeStyle=col('--fg');g.lineWidth=2;g.beginPath();g.arc(X(k),Y(S2.f),9,0,7);g.stroke()}}});
+ $('#o2').innerHTML=`k = ${k}: uncorrected P(≥1 false positive) = <b>${pct(fw(k))}</b>; with Bonferroni = <b>${pct(bo(k))}</b>.`+(S2.k===k?` Simulated: <b>${pct(S2.f)}</b>.`:'')}
+$('#b2').onclick=()=>{rnd=Math.random;const k=c2.k.v;let hit=0;for(let s=0;s<5000;s++){for(let i=0;i<k;i++){if(rnd()<.05){hit++;break}}}S2.k=k;S2.f=hit/5000;draw2()};
+redraw[2]=draw2;
+
+/* ---------- 3 p-hacking ---------- */
+const S3={};
+function build3(){const m=$('#mode3').value;const base={stop:[{id:'n0',label:'Start N per group',min:5,max:30,step:1,val:10,fmt:v=>v},{id:'st',label:'Add per group each time',min:1,max:20,step:1,val:5,fmt:v=>v},{id:'mx',label:'Max N per group',min:20,max:200,step:5,val:100,fmt:v=>v}],
+ out:[{id:'k',label:'Number of outcome measures',min:1,max:10,step:1,val:5,fmt:v=>v},{id:'n',label:'N per group',min:10,max:100,step:5,val:30,fmt:v=>v}],
+ sub:[{id:'m',label:'Number of subgroups to try',min:2,max:6,step:1,val:4,fmt:v=>v}]}[m];S3.c=mk('c3',base)}
+$('#mode3').onchange=()=>{build3();S3.r=null;draw3()};build3();
+function sim3(m){const c=S3.c;
+ if(m==='stop'){const n0=c.n0.v,st=c.st.v,mx=c.mx.v;const x=gen(n0),y=gen(n0);let n=n0;for(;;){if(ttest(x,y).p<.05)return true;if(n>=mx)return false;for(let i=0;i<st;i++){x.push(randn());y.push(randn())}n+=st}}
+ if(m==='out'){for(let i=0;i<c.k.v;i++)if(ttest(gen(c.n.v),gen(c.n.v)).p<.05)return true;return false}
+ const x=gen(40),y=gen(40),M=c.m.v;if(ttest(x,y).p<.05)return true;for(let s=0;s<M;s++){const xs=x.filter((_,i)=>i%M===s),ys=y.filter((_,i)=>i%M===s);if(ttest(xs,ys).p<.05)return true}return false}
+function draw3(){const m=$('#mode3').value;const f=S3.r;const ym=Math.max(.5,f||0)*1.1;
+ plot($('#p3a'),240,{xr:[-.5,1.5],yr:[0,ym],xt:[],yt:[0,.1,.2,.3,.4,.5,.6,.8].filter(v=>v<=ym),fy:v=>Math.round(v*100)+'%',yl:'false-positive rate',title:'Truth: NO effect',draw:(g,X,Y)=>{
+ g.fillStyle=col('--ok');g.fillRect(X(-.35),Y(.05),X(.35)-X(-.35),Y(0)-Y(.05));g.textAlign='center';g.fillStyle=col('--fg');g.fillText('honest single test: 5%',X(0),Y(0)+16);
+ if(f!==undefined&&f!==null){g.fillStyle=col('--acc2');g.fillRect(X(.65),Y(f),X(1.35)-X(.65),Y(0)-Y(f));g.fillStyle=col('--fg');g.fillText('hacked: '+pct(f),X(1),Y(f)-5)}else g.fillText('run the simulation',X(1),Y(0)-10);
+ hseg(g,X,Y,.05,-.5,1.5,col('--mut'),[4,3])}});
+ const tr=S3.tr;plot($('#p3b'),240,{xr:[0,tr?tr.length+1:100],yr:[0,1],xt:tr?[0,Math.round(tr.length/2),tr.length]:[0],yt:[0,.05,.25,.5,.75,1],xl:'N per group (participants accumulating)',yl:'p-value',title:'One null experiment, peeking',draw:(g,X,Y)=>{
+ hseg(g,X,Y,.05,0,tr?tr.length+1:100,col('--acc2'),[4,3]);if(tr){line(g,tr.map((p,i)=>[i+S3.n0,p]),X,Y,col('--acc'),1.8);const i=tr.findIndex(p=>p<.05);if(i>=0){g.fillStyle=col('--acc2');g.beginPath();g.arc(X(i+S3.n0),Y(tr[i]),6,0,7);g.fill()}}}})}
+$('#b3').onclick=()=>{rnd=Math.random;const m=$('#mode3').value;$('#b3').textContent='Running...';defer(()=>{let h=0;for(let i=0;i<3000;i++)if(sim3(m))h++;S3.r=h/3000;$('#b3').textContent='Run 3000 null experiments';draw3();
+ const msg={stop:'Each peek is another chance to get p&lt;.05; stopping at the first success keeps the "wins". Fix: prespecify N (or use a sequential design with corrected α, or a Bayesian stopping rule).',out:'With k outcomes, expected ≈ 1−.95<sup>k</sup> if independent. Fix: prespecify the primary outcome or correct for k tests.',sub:'Overall test plus every subgroup is many tests with small samples. Fix: prespecify subgroups/exclusions, correct for the number of tests.'}[m];
+ $('#o3').innerHTML=`False-positive rate: <b>${pct(S3.r)}</b> (should be 5%). ${msg}`})};
+$('#b3b').onclick=()=>{rnd=Math.random;$('#mode3').value='stop';build3();const c=S3.c;const n0=c.n0.v,mx=c.mx.v;const x=gen(mx),y=gen(mx);const tr=[];for(let n=n0;n<=mx;n++)tr.push(ttest(x.slice(0,n),y.slice(0,n)).p);S3.tr=tr;S3.n0=n0;draw3();
+ const i=tr.findIndex(p=>p<.05);$('#o3').innerHTML=i>=0?`This null experiment first crossed p&lt;.05 at N = ${i+n0} per group. A researcher who peeks at every step would have stopped and reported it.`:'This one never crossed .05. Try again; many do.'};
+redraw[3]=draw3;
+
+/* ---------- 4 power ---------- */
+const c4=mk('c4',[{id:'n',label:'N per group',min:5,max:400,step:1,val:20,fmt:v=>v,on:()=>draw4()},{id:'d',label:'True effect d',min:0.1,max:1.5,step:0.05,val:0.5,on:()=>draw4()},{id:'a',label:'α',opts:[0.05,0.01,0.005],val:0.05,on:()=>draw4()}]);
+const S4={};
+function draw4(){const n=c4.n.v,d=c4.d.v,al=+c4.a.el.value;
+ plot($('#p4a'),250,{xr:[0,400],yr:[0,1],xt:[0,100,200,300,400],yt:[0,.25,.5,.8,1],xl:'N per group',yl:'power',title:'Power vs sample size',draw:(g,X,Y)=>{
+ hseg(g,X,Y,.8,0,400,col('--mut'),[4,3]);[[.2,'--gray'],[.5,'--gray'],[.8,'--gray']].forEach(([dd,c])=>{const P=[];for(let i=2;i<=400;i+=2)P.push([i,power(i,dd,al)]);line(g,P,X,Y,col(c),1.5);g.fillStyle=col('--mut');g.textAlign='left';g.fillText('d='+dd,X(dd===.2?330:dd===.5?95:42),Y(power(dd===.2?330:dd===.5?95:42,dd,al))-6)});
+ const P=[];for(let i=2;i<=400;i+=2)P.push([i,power(i,d,al)]);line(g,P,X,Y,col('--acc'),3);vseg(g,X,Y,n,0,1,col('--fg'),[3,3]);g.fillStyle=col('--acc');g.beginPath();g.arc(X(n),Y(power(n,d,al)),6,0,7);g.fill()}});
+ plot($('#p4b'),250,{xr:[0,1.5],yr:[0,1],xt:[0,.25,.5,.75,1,1.25,1.5],yt:[0,.25,.5,.8,1],xl:'true effect size d',yl:'power',title:`Power vs effect size (N = ${n})`,draw:(g,X,Y)=>{
+ hseg(g,X,Y,.8,0,1.5,col('--mut'),[4,3]);const P=[];for(let i=0;i<=150;i++)P.push([i/100,power(n,i/100,al)]);line(g,P,X,Y,col('--acc'),3);vseg(g,X,Y,d,0,1,col('--fg'),[3,3]);g.fillStyle=col('--acc');g.beginPath();g.arc(X(d),Y(power(n,d,al)),6,0,7);g.fill()}});
+ let need=null;for(let i=2;i<=2000;i++)if(power(i,d,al)>=.8){need=i;break}
+ $('#o4a').innerHTML=`At N = ${n} per group, d = ${fm(d)}, α = ${al}: power ≈ <b>${pct(power(n,d,al))}</b>. For 80% power you need about <b>${need}</b> per group. (Normal approximation to the two-sample t-test.)`;drawSim4()}
+function drawSim4(){const s=S4.r;if(!s)return;const k=40,a=-1.5,b=3;const all=bins(s.all,a,b,k),sig=bins(s.sig,a,b,k);const ym=Math.max(...all)*1.1;
+ plot($('#p4c'),260,{xr:[a,b],yr:[0,ym],xt:[-1,0,1,2,3],yt:[],xl:'estimated effect d̂ in each simulated experiment',yl:'count',title:`${s.all.length} experiments, true d = ${fm(s.d)}, N = ${s.n}`,draw:(g,X,Y)=>{
+ for(let i=0;i<k;i++){const x0=X(a+i*(b-a)/k),w=X(a+(i+1)*(b-a)/k)-x0-1;g.fillStyle=col('--gray');g.fillRect(x0,Y(all[i]),w,Y(0)-Y(all[i]));g.fillStyle=col('--acc');g.fillRect(x0,Y(sig[i]),w,Y(0)-Y(sig[i]))}
+ vseg(g,X,Y,s.d,0,ym,col('--acc2'),[4,3],2);g.fillStyle=col('--acc2');g.textAlign='left';g.fillText('true d',X(s.d)+4,Y(ym)+14)}});
+ const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;const sd=[...s.all].sort((x,y)=>x-y);
+ $('#o4').innerHTML=`Blue = significant (p&lt;.05, either direction), grey = not. Empirical power: <b>${pct(s.sig.length/s.all.length)}</b>. Mean d̂ across all experiments: <b>${avg(s.all).toFixed(2)}</b> (≈ unbiased). Mean d̂ among <i>significant</i> experiments: <b>${s.sig.length?avg(s.sig).toFixed(2):'n/a'}</b> (true d = ${fm(s.d)}). Middle 90% of d̂: [${sd[Math.floor(sd.length*.05)].toFixed(2)}, ${sd[Math.floor(sd.length*.95)].toFixed(2)}]; that's how noisy a pilot's effect size would be.`}
+$('#b4').onclick=()=>{rnd=Math.random;const n=c4.n.v,d=c4.d.v,al=+c4.a.el.value;const all=[],sig=[];for(let i=0;i<3000;i++){const r=ttest(gen(n),gen(n,d));all.push(r.d);if(r.p<al)sig.push(r.d)}S4.r={all,sig,d,n};drawSim4()};
+redraw[4]=draw4;
+
+/* ---------- 5 estimates ---------- */
+function calc5(){const a=+$('#m1').value,b=+$('#m2').value,s=+$('#sd').value;$('#o5a').innerHTML=`Raw difference β̂ = <b>${(a-b).toFixed(2)}</b>; d = ${(a-b).toFixed(2)} ÷ ${s} = <b>${s?((a-b)/s).toFixed(2):'—'}</b>. Same raw difference, bigger SD ⇒ smaller d. Cohen's rough labels: .2 small, .5 medium, .8 large (arbitrary conventions).`}
+['m1','m2','sd'].forEach(i=>$('#'+i).oninput=calc5);document.querySelectorAll('#s5 .pill').forEach(b=>b.onclick=()=>{const [a,c,d]=b.dataset.p.split(',');$('#m1').value=a;$('#m2').value=c;$('#sd').value=d;calc5()});calc5();
+const c5=mk('c5',[{id:'n',label:'N per group',min:5,max:200,step:1,val:20,fmt:v=>v},{id:'t',label:'True difference (SD = 1)',min:0,max:1,step:0.05,val:0.3}]);const S5={};
+function draw5(){const r=S5.r;if(!r)return;const t=S5.t;plot($('#p5'),420,{xr:[-2,3],yr:[0,r.length+1],xt:[-2,-1,0,1,2,3],yt:[],xl:'estimated difference with 95% CI',L:20,draw:(g,X,Y)=>{
+ vseg(g,X,Y,t,0,r.length+1,col('--fg'),null,2);vseg(g,X,Y,0,0,r.length+1,col('--mut'),[3,3]);
+ r.forEach((e,i)=>{const miss=t<e.lo||t>e.hi,c=miss?col('--acc2'):col('--acc');hseg(g,X,Y,i+1,e.lo,e.hi,c,null,2);g.fillStyle=c;g.beginPath();g.arc(X(e.m),Y(i+1),3,0,7);g.fill()})}});
+ const m=r.filter(e=>t<e.lo||t>e.hi).length;const z=r.filter(e=>e.lo>0||e.hi<0).length;$('#o5').innerHTML=`<b>${r.length-m}/${r.length}</b> intervals contain the true value (solid line); expected ≈ 95%. <b>${z}</b> intervals exclude 0 (i.e., "significant"), which is the power at this N.`}
+$('#b5').onclick=()=>{rnd=Math.random;const n=c5.n.v,t=c5.t.v;const r=[];for(let i=0;i<50;i++){const e=ttest(gen(n),gen(n,t));const h=tcrit(e.df)*e.se;r.push({m:e.diff,lo:e.diff-h,hi:e.diff+h})}S5.r=r;S5.t=t;draw5()};
+redraw[5]=()=>{draw5();draw5c()};
+const c5c=mk('c5c',[{id:'t',label:'True effect d',min:0,max:1,step:0.05,val:0.3},{id:'no',label:'Original N per group',min:10,max:100,step:5,val:20,fmt:v=>v},{id:'nr',label:'Replication N per group',min:20,max:300,step:10,val:100,fmt:v=>v}]);const S5c={};
+function draw5c(){const r=S5c.r;if(!r)return;plot($('#p5c'),300,{xr:[-.6,r.length-.4],yr:[-.8,1.8],xt:[],yt:[-.5,0,.5,1,1.5],yl:'effect estimate (d) & 95% CI',draw:(g,X,Y)=>{
+ hseg(g,X,Y,0,-.6,r.length,col('--mut'),[3,3]);if($('#tru').checked)hseg(g,X,Y,S5c.t,-.6,r.length,col('--acc2'),[6,3],2);
+ r.forEach((e,i)=>{const c=i?col('--acc'):col('--warn');vseg(g,X,Y,i,e.lo,e.hi,c,null,3);g.fillStyle=c;g.beginPath();g.arc(X(i),Y(e.m),5,0,7);g.fill();g.textAlign='center';g.fillStyle=col('--fg');g.fillText(i?'Replication '+i+' (N='+e.n+')':'Original (N='+e.n+')',X(i),Y(-.8)-6)})}});
+ $('#o5c').innerHTML=r.map((e,i)=>`${i?'Rep '+i:'Original'}: d̂ = <b>${e.m.toFixed(2)}</b> [${e.lo.toFixed(2)}, ${e.hi.toFixed(2)}]`).join(' &nbsp;|&nbsp; ')+'<br><small>Narrower CI = more precise (larger N). Check: which replications have CIs overlapping the original estimate? Is the original CI wide enough to include them?</small>'}
+function one5(n,t){const e=ttest(gen(n),gen(n,t));const h=tcrit(e.df)*e.se;return{m:e.diff,lo:e.diff-h,hi:e.diff+h,n,p:e.p}}
+$('#b5c').onclick=()=>{rnd=Math.random;const t=c5c.t.v,no=c5c.no.v,nr=c5c.nr.v;let o=one5(no,t);if($('#pub').checked){let k=0;while((o.p>=.05||o.m<0)&&k++<3000)o=one5(no,t)}S5c.r=[o,one5(nr,t),one5(nr,t),one5(nr,t)];S5c.t=t;draw5c()};
+$('#tru').onchange=draw5c;
+
+/* ---------- 6 Bayes ---------- */
+const c6=mk('c6',[{id:'n',label:'N per group',min:5,max:300,step:1,val:24,fmt:v=>v,on:()=>draw6()},{id:'t',label:'t statistic',min:-1,max:6,step:0.05,val:2.86,on:()=>draw6()},{id:'po',label:'Your prior odds H1:H0',min:-2,max:2,step:0.25,val:0,fmt:v=>fm(Math.pow(10,v))+':1',on:()=>draw6()}]);
+function lab(b){const a=b>=1?b:1/b;const s=a<3?'anecdotal':a<10?'moderate':a<30?'strong':a<100?'very strong':'extreme';return a<1.0001?'no evidence either way':s+' evidence for '+(b>=1?'H1':'H0')}
+function draw6(){const n=c6.n.v,t=c6.t.v;const b=bf10(t,n,n),p=pFromT(t,2*n-2),po=Math.pow(10,c6.po.v),post=po*b;
+ $('#o6').innerHTML=`t(${2*n-2}) = ${t.toFixed(2)} → p = <b>${p<.001?'&lt;.001':p.toFixed(3)}</b>, BF10 = <b>${b>=100?b.toFixed(0):b.toFixed(2)}</b> (BF01 = ${(1/b).toFixed(2)}) → <i>${lab(b)}</i>.<br>Prior odds ${fm(po)}:1 × BF ${b.toFixed(2)} = posterior odds <b>${post.toFixed(2)}:1</b> → P(H1 | data) ≈ <b>${pct(post/(1+post))}</b> (only between these two models).`;
+ const P=[];for(let x=-1;x<=6.001;x+=0.1)P.push([x,Math.log10(bf10(x,n,n))]);
+ plot($('#p6a'),230,{xr:[-1,6],yr:[-2,3],xt:[-1,0,1,2,3,4,5,6],yt:[-2,-1,0,1,2,3],fy:v=>fm(Math.pow(10,v)),xl:`t statistic (N = ${n} per group)`,yl:'BF10 (log scale)',title:'BF10 as a function of t',draw:(g,X,Y)=>{
+ hseg(g,X,Y,0,-1,6,col('--mut'),[4,3]);hseg(g,X,Y,1,-1,6,col('--ok'),[2,3]);hseg(g,X,Y,-1,-1,6,col('--ok'),[2,3]);vseg(g,X,Y,tcrit(2*n-2),-2,3,col('--acc2'),[4,3]);g.fillStyle=col('--acc2');g.textAlign='left';g.fillText('p = .05',X(tcrit(2*n-2))+4,Y(-1.8));
+ line(g,P,X,Y,col('--acc'),3);g.fillStyle=col('--fg');g.beginPath();g.arc(X(Math.min(6,Math.max(-1,t))),Y(Math.max(-2,Math.min(3,Math.log10(b)))),6,0,7);g.fill()}})}
+redraw[6]=()=>{draw6();draw6b()};
+const c6b=mk('c6b',[{id:'d',label:'True effect d',min:0,max:1,step:0.1,val:0.5},{id:'mx',label:'Max N per group',min:20,max:200,step:10,val:100,fmt:v=>v}]);const S6={};
+function seq(d,mx,rec){const x=gen(10),y=gen(10,d);let n=10;const tr=[];for(;;){const bf=bf10(ttest(x,y).t,n,n);if(rec)tr.push([n,Math.log10(bf)]);if(bf>=10)return{o:'H1',n,tr};if(bf<=0.1)return{o:'H0',n,tr};if(n>=mx)return{o:'?',n,tr};for(let i=0;i<5;i++){x.push(randn());y.push(randn()+d)}n+=5}}
+function draw6b(){const tr=S6.tr;if(!tr)return;plot($('#p6b'),240,{xr:[0,Math.max(40,tr[tr.length-1][0]+5)],yr:[-2,2],xt:[0,20,40,60,80,100,150,200].filter(v=>v<=Math.max(40,tr[tr.length-1][0]+5)),yt:[-2,-1,0,1,2],fy:v=>fm(Math.pow(10,v)),xl:'N per group',yl:'BF10 (log scale)',title:'One sequential study',draw:(g,X,Y)=>{
+ hseg(g,X,Y,1,0,300,col('--ok'),[4,3],1.5);hseg(g,X,Y,-1,0,300,col('--acc2'),[4,3],1.5);hseg(g,X,Y,0,0,300,col('--mut'),[2,3]);line(g,tr.map(p=>[p[0],Math.max(-2,Math.min(2,p[1]))]),X,Y,col('--acc'),2.5)}})}
+$('#b6').onclick=()=>{rnd=Math.random;$('#b6').textContent='Running...';defer(()=>{const d=c6b.d.v,mx=c6b.mx.v;const r={H1:0,H0:0,'?':0};let ns=0;for(let i=0;i<300;i++){const s=seq(d,mx,false);r[s.o]++;ns+=s.n}$('#b6').textContent='Run 300 studies';
+ $('#o6b').innerHTML=`True d = ${fm(d)}. Ended with BF10 ≥ 10: <b>${pct(r.H1/300)}</b>; BF10 ≤ 1/10: <b>${pct(r.H0/300)}</b>; undecided at max N: <b>${pct(r['?']/300)}</b>. Mean stopping N: <b>${(ns/300).toFixed(0)}</b> per group. ${d===0?'With d = 0, the BF can <i>stop for the null</i> (a p-value can never do that) and rarely ends at BF ≥ 10.':'Compare with a fixed-N design: sequential BF stops early when evidence is clear.'}`})};
+$('#b6b').onclick=()=>{rnd=Math.random;const s=seq(c6b.d.v,c6b.mx.v,true);S6.tr=s.tr;draw6b();$('#o6b').innerHTML=`This study stopped at N = ${s.n} per group with ${s.o==='H1'?'BF10 ≥ 10 (support for H1)':s.o==='H0'?'BF10 ≤ 1/10 (support for H0)':'no decision at max N'}.`};
+
+/* ---------- 7 Practice ---------- */
+function seeded(f){rnd=mulberry(7);const r=f();rnd=Math.random;return r}
+const Q=[
+{c:'p-values',q:'Finish the sentence: "A p-value is the probability of ___ assuming ___." Then name one thing it is NOT.',a:'…of data as extreme as, or more extreme than, what we observed, assuming the null hypothesis is true. It is NOT the probability the null is true (that is P(H0|data)), not the probability the result is "due to chance", and not an effect size.'},
+{c:'p-values',q:'Sketch the distribution of p-values across many experiments (a) when the null is true and (b) when there is a real effect and power is about 80%.',a:'(a) Flat/uniform on [0,1]; 5% fall below .05 regardless of N. (b) Right-skewed, piled up near 0; about 80% fall below .05. More power ⇒ more mass near 0.'},
+{c:'p-values',q:'Read this plot: 1000 p-values from many studies of the same effect. Is the null true? Roughly what is the power?',draw:c=>{const v=seeded(()=>{const a=[];for(let i=0;i<1000;i++)a.push(ttest(gen(30),gen(30,.4)).p);return a});const b=bins(v,0,1,20),ym=Math.max(...b)*1.1;plot(c,200,{xr:[0,1],yr:[0,ym],xt:[0,.25,.5,.75,1],yt:[],xl:'p-value',yl:'count',draw:(g,X,Y)=>{b.forEach((h,i)=>{g.fillStyle=col('--acc');g.fillRect(X(i/20)+1,Y(h),X(.05)-X(0)-2,Y(0)-Y(h))});vseg(g,X,Y,.05,0,ym,col('--acc2'),[4,3])}})},a:'Strongly right-skewed with a big spike near 0: not a flat null histogram, so a real effect is present. The share in the leftmost bin (p&lt;.05) estimates power; here about a third (a low-power design, d≈.4 with 30 per group). If it had been flat, the null would be consistent.'},
+{c:'p-values',q:'Your friend gets p = .03 and says "there\'s only a 3% chance the null is true." What\'s wrong? And what can you conclude from p = .20?',a:'That swaps P(data | H0) for P(H0 | data); getting the latter needs a prior and an alternative (Bayes). p = .03 only says data this extreme are rare under H0. p = .20 means failing to reject: it is not evidence for the null (the data might be just as likely under H1, esp. with low power).'},
+{c:'Multiplicity',q:'You run 20 independent tests on pure noise at α = .05. What is the chance of at least one p&lt;.05? How would Bonferroni change things?',a:'1 − .95²⁰ ≈ 64%. Bonferroni uses α/20 = .0025 per test, bringing the family-wise error rate back to about 5%. It only works if you know (and report) the full set of tests.'},
+{c:'p-hacking',q:'Why does peeking at the data and adding participants until p&lt;.05 inflate false positives, even though every individual t-test is computed correctly? Sketch the p-value trajectory of one null experiment.',a:'Each peek is another chance for a null experiment to cross .05, and stopping at the first success keeps the wins. The long-run false-positive rate rises well above 5% (e.g., ~20%+ with many peeks). Sketch: a wandering line that can dip below .05 at some N even with no effect. Fix: prespecify N / stopping rule; or sequential analysis with corrected α; or Bayesian sequential design.'},
+{c:'p-hacking',q:'Name three forms of p-hacking and the preregistration element that blocks each.',a:'(1) Optional stopping → preregister sample size/stopping rule. (2) Selective reporting of outcomes → preregister the primary outcome(s) and which will be tested. (3) Flexible exclusions/subgroups/covariates → preregister exclusion rules, subgroups and the analysis plan. Preregistration makes the number of tests known so p-values (or corrections) mean what they claim.'},
+{c:'Power',q:'Power depends on three things. How does each change power? Sketch power vs N per group for d = 0.2, 0.5, 0.8.',a:'Bigger true effect → more power; larger N → more power; larger α → more power (but more false positives). Sketch: three S-curves rising from ~α toward 1, d = .8 steepest and reaches 80% at ≈26 per group, d = .5 at ≈64, d = .2 at ≈394.'},
+{c:'Power',q:'Read this plot: which curve is the largest effect? About how many per group give 80% power for the middle curve?',draw:c=>plot(c,220,{xr:[0,200],yr:[0,1],xt:[0,50,100,150,200],yt:[0,.25,.5,.8,1],xl:'N per group',yl:'power',draw:(g,X,Y)=>{hseg(g,X,Y,.8,0,200,col('--mut'),[4,3]);[[.8,'--acc2','A'],[.5,'--acc','B'],[.3,'--ok','C']].forEach(([d,cl,l])=>{const P=[];for(let i=2;i<=200;i+=2)P.push([i,power(i,d,.05)]);line(g,P,X,Y,col(cl),2.5);g.fillStyle=col(cl);g.fillText(l,X(i2(d)),Y(power(i2(d),d,.05))-6)})}}),a:'Curve A (steepest) is the largest effect (d ≈ .8). The middle curve B (d ≈ .5) crosses 80% at about 64 per group. The smallest effect C (d ≈ .3) needs ~175 per group. Smaller effects need much larger N.'},
+{c:'Power',q:'A literature is built only from significant results of underpowered studies. What happens to the published effect sizes, and why?',a:'They are inflated (winner\'s curse). Underpowered studies only reach p&lt;.05 when sampling noise happens to overestimate the effect, so the significant subset is biased upward. Also low power means a larger share of significant results are false positives, and replications shrink.'},
+{c:'Power',q:'Why is it a bad idea to run a small pilot, estimate d, and plug it into a power analysis?',a:'A small pilot gives a very imprecise d̂ (huge sampling variability). If it overestimates, the main study is badly underpowered; if it underestimates, you waste resources. Better: use a meta-analysis (with bias diagnostics), a smallest effect size of interest, or a general expectation (e.g., "what if d = 0.5?"). Pilots are for feasibility.'},
+{c:'Estimates & CIs',q:'Milk-first tea is rated 1 point higher on a 7-pt scale by adults (SD 1.25) and 1 point higher by kids (SD 2.5). Compute d for each and say what that shows about standardized effect sizes.',a:'Adults d = 1/1.25 = 0.8; kids d = 1/2.5 = 0.4. Same raw effect, different d because variability differs: d depends on the population\'s spread. d lets you compare across different scales/studies (and is used in power analysis), but can mislead when variability differs; report raw units too when they\'re meaningful.'},
+{c:'Estimates & CIs',q:'Why do smaller studies give noisier estimates? Sketch the sampling distribution of the treatment effect for N = 9 vs N = 200 per group.',a:'The standard error ≈ σ/√n: the sampling distribution is centered on the same true effect but is much narrower for N = 200. Sketch two bells at the same center, the N = 9 one wide and flat, the N = 200 one tall and narrow. Quadrupling n halves the SE.'},
+{c:'Estimates & CIs',q:'A study reports a 95% CI of [0.1, 0.4]. Give the correct interpretation, and explain what is wrong with "there is a 95% probability the true effect lies between 0.1 and 0.4".',a:'Correct: if we repeated the study many times and built an interval each time, 95% of the intervals would contain the true parameter. The "95% probability" statement treats the parameter as random and this one interval as fixed; in the frequentist view the parameter is fixed and the interval varies. (That statement fits a Bayesian credible interval.) Because the interval excludes 0, p&lt;.05 for a test against zero.'},
+{c:'Estimates & CIs',q:'Read this plot: an original study and three larger replications. What would you conclude?',draw:c=>{const o={m:.8,lo:.05,hi:1.55},r=[{m:.35,lo:.1,hi:.6},{m:.22,lo:-.03,hi:.47},{m:.4,lo:.15,hi:.65}];plot(c,230,{xr:[-.6,4.6],yr:[-.5,1.8],xt:[],yt:[-.5,0,.5,1,1.5],yl:'effect (d) & 95% CI',draw:(g,X,Y)=>{hseg(g,X,Y,0,-.6,4.6,col('--mut'),[3,3]);[o,...r].forEach((e,i)=>{const cl=i?col('--acc'):col('--warn');vseg(g,X,Y,i+.2,e.lo,e.hi,cl,null,3);g.fillStyle=cl;g.beginPath();g.arc(X(i+.2),Y(e.m),5,0,7);g.fill();g.fillStyle=col('--fg');g.textAlign='center';g.fillText(i?'Rep '+i:'Original',X(i+.2),Y(-.5)-6)})}})},a:'The replications agree with each other, are more precise (narrower), and cluster around d ≈ .3. The original is much larger but has a very wide CI that still overlaps the replication estimates, so the data are not strongly inconsistent; yet the original likely overestimated (small N + significance filter). Best summary: combine them, with the replications dominating because of precision. Not a clean "failure" or "success": compare estimates and CIs, not just significance.'},
+{c:'Bayes factors',q:'What does BF10 compare? How do you read BF10 = 3, 10, and 1/3?',a:'BF10 = P(data | H1) / P(data | H0). 3: data are 3× more likely under H1 (moderate/anecdotal support for H1). 10: 10× more likely under H1 (strong). 1/3: data are 3× more likely under H0 (BF01 = 3), i.e., moderate support for the null. These are likelihood ratios, not probabilities of hypotheses; combine with prior odds to get posterior odds.'},
+{c:'Bayes factors',q:'Give three ways a Bayes factor differs from a p-value.',a:'(1) Compares two models (H1 vs H0) rather than evaluating only the null. (2) Can provide evidence FOR the null (BF &lt; 1), which p cannot. (3) Uses the data actually observed, not "or more extreme". Also: continuous with no magic threshold; depends on the H1 prior; independent of prior odds on hypotheses; can also be hacked via selective reporting.'},
+{c:'Bayes factors',q:'A study reports t(42) = 0.43, BF = 0.18. Interpret it.',a:'1/0.18 ≈ 5.6: the data are about 5–6 times more likely under H0 than under H1, moderate evidence for no effect (given that H1 model). A p-value of ~.67 here could only say "failed to reject", not support the null.'}];
+function i2(d){return d===.8?18:d===.5?55:110}
+const cats=['All',...new Set(Q.map(q=>q.c))];let cat='All';const tally={};
+function renderQ(){$('#cats').innerHTML=cats.map(c=>`<button class="pill ${c===cat?'on':''}" data-c="${c}">${c}</button>`).join('');
+ $('#cats').querySelectorAll('button').forEach(b=>b.onclick=()=>{cat=b.dataset.c;renderQ()});
+ const box=$('#qs');box.innerHTML='';Q.forEach((q,i)=>{if(cat!=='All'&&q.c!==cat)return;const d=document.createElement('div');d.className='card q';d.innerHTML=`<div class="cat">${q.c} · Q${i+1}</div><p>${q.q}</p>${q.draw?'<canvas></canvas>':''}<button class="b alt">Show answer</button><div class="ans">${q.a}<br><br><button class="pill g">✓ Got it</button><button class="pill r">✗ Review again</button> <span class="st"></span></div>`;box.appendChild(d);
+ const st=()=>d.querySelector('.st').innerHTML=tally[i]===1?'<span class="ok">marked: got it</span>':tally[i]===0?'<span class="bad">marked: review</span>':'';st();
+ d.querySelector('.b').onclick=()=>d.classList.toggle('show');d.querySelector('.g').onclick=()=>{tally[i]=1;st();upd()};d.querySelector('.r').onclick=()=>{tally[i]=0;st();upd()};
+ if(q.draw)q.draw(d.querySelector('canvas'))});upd()}
+function upd(){const g=Object.values(tally).filter(v=>v===1).length,r=Object.values(tally).filter(v=>v===0).length;$('#tally').innerHTML=`Got it: <b class="ok">${g}</b> · Review: <b class="bad">${r}</b> · Not tried: ${Q.length-g-r}`}
+redraw[7]=renderQ;
+
+show(0);
+</script>
+</body>
+</html>
